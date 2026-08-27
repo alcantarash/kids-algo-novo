@@ -223,7 +223,13 @@ function shuffle(array) {
 
 function pickQuestions() {
   const count = Math.min(QUESTIONS_TO_SHOW, QUESTION_BANK.length);
-  return shuffle(QUESTION_BANK).slice(0, count);
+  const chosen = shuffle(QUESTION_BANK).slice(0, count);
+  return chosen.map((q) => {
+    const correctText = q.options[q.correct];
+    const shuffledOptions = shuffle(q.options);
+    const newCorrectIndex = shuffledOptions.indexOf(correctText);
+    return { ...q, options: shuffledOptions, correct: newCorrectIndex };
+  });
 }
 
 const app = document.getElementById("app");
