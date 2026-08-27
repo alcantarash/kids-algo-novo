@@ -75,6 +75,7 @@
     margin-bottom: 12px;
     font-size: 15px;
     line-height: 1.4;
+    text-transform: uppercase;
   }
   .option {
     display: flex;
@@ -88,6 +89,7 @@
     font-size: 14px;
     line-height: 1.4;
     transition: background 0.15s, border-color 0.15s;
+    text-transform: uppercase;
   }
   .option:hover { background: #f7f5ff; }
   .option.selected { border-color: #6c5ce7; background: #f0edfe; }
@@ -114,7 +116,8 @@
 <div class="card" id="app"></div>
 
 <script>
-const FORM_ENDPOINT = "https://formspree.io/f/myegvloq";
+const WEB3FORMS_ACCESS_KEY = "90833577-26d5-435a-9745-ac6b6b878914";
+const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit";
 const QUESTIONS_TO_SHOW = 7;
 
 // Banco de perguntas. Adicione novas perguntas aqui (até 14) mantendo o mesmo formato.
@@ -182,6 +185,28 @@ const QUESTION_BANK = [
       "A existência de um único Deus em três pessoas diferentes: o Pai, o Filho e o Espírito Santo.",
       "Um nome antigo para a Bíblia.",
       "Uma festa comemorada apenas na Páscoa."
+    ],
+    correct: 1
+  },
+  {
+    id: "q7",
+    text: "Qual atitude devemos ter para alegrar o Espírito Santo?",
+    options: [
+      "Obediência.",
+      "Indiferença.",
+      "Desobediência.",
+      "Silêncio total."
+    ],
+    correct: 0
+  },
+  {
+    id: "q8",
+    text: "Quem são os filhos de Deus?",
+    options: [
+      "Apenas os líderes da igreja.",
+      "Todos que são guiados pelo Espírito Santo.",
+      "Somente os que nasceram em famílias cristãs.",
+      "Ninguém pode ser considerado filho de Deus."
     ],
     correct: 1
   }
@@ -331,17 +356,22 @@ async function submitQuiz() {
   const MAX_ATTEMPTS = 3;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
-      const response = await fetch(FORM_ENDPOINT, {
+      const response = await fetch(WEB3FORMS_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify({
+          access_key: WEB3FORMS_ACCESS_KEY,
+          subject: `Prova - ${record.nome} (${record.nota})`,
           nome: record.nome,
           data_hora: record.data_hora,
           nota: record.nota,
           respostas: recordToPlainText(record)
         })
       });
-      if (!response.ok) throw new Error("Resposta HTTP " + response.status);
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result || result.success !== true) {
+        throw new Error("Falha no envio via Web3Forms");
+      }
       state.screen = "success";
       render();
       return;
