@@ -149,7 +149,39 @@
     font-size: 42px;
     margin-bottom: 8px;
   }
+  .score-result {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 10px 22px;
+    background: #f0edfe;
+    color: #4c3d9e;
+    font-weight: 700;
+    font-size: 18px;
+    border-radius: 999px;
+  }
   .error-msg { color: #b73030; font-size: 13px; margin: -12px 0 16px; }
+  .timer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0edfe;
+    color: #4c3d9e;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 20px;
+    transition: background 0.3s, color 0.3s;
+  }
+  .timer-badge.timer-warning {
+    background: #fdeaea;
+    color: #b73030;
+    animation: pulse-warning 1s ease-in-out infinite;
+  }
+  @keyframes pulse-warning {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
 </style>
 </head>
 <body>
@@ -318,6 +350,39 @@ function pickQuestions() {
 
 const app = document.getElementById("app");
 let state = { screen: "start", name: "", questions: [], answers: {} };
+const QUIZ_DURATION_SECONDS = 80;
+let timerInterval = null;
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function formatTime(totalSeconds) {
+  const s = Math.max(0, totalSeconds);
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
+function startTimer() {
+  if (timerInterval) return;
+  timerInterval = setInterval(() => {
+    state.timeLeft--;
+    const el = document.getElementById("timerText");
+    if (el) {
+      el.textContent = formatTime(state.timeLeft);
+      const badge = document.getElementById("timerBadge");
+      if (badge && state.timeLeft <= 10) badge.classList.add("timer-warning");
+    }
+    if (state.timeLeft <= 0) {
+      stopTimer();
+      submitQuiz();
+    }
+  }, 1000);
+}
 
 function render() {
   if (state.screen === "start") renderStart();
@@ -370,6 +435,7 @@ function renderStart() {
     state.name = val;
     state.questions = pickQuestions();
     state.answers = {};
+    state.timeLeft = QUIZ_DURATION_SECONDS;
     state.screen = "quiz";
     render();
   };
@@ -400,10 +466,13 @@ function renderQuiz() {
   app.innerHTML = `
     <h1>Devocional - Espírito Santo</h1>
     <div class="subtitle">${escapeHtml(state.name)}</div>
+    <div class="timer-badge" id="timerBadge">⏱ <span id="timerText">${formatTime(state.timeLeft)}</span></div>
     ${qHtml}
     <div class="error-msg hidden" id="quizError">Responda todas as perguntas antes de enviar.</div>
     <button id="submitBtn">Enviar respostas</button>
   `;
+
+  startTimer();
 
   document.querySelectorAll(".option").forEach((el) => {
     el.addEventListener("click", () => {
@@ -428,12 +497,13 @@ function buildRecord() {
   let score = 0;
   const detail = state.questions.map((q, qi) => {
     const chosen = state.answers[q.id];
-    const isCorrect = chosen === q.correct;
+    const wasAnswered = chosen !== undefined;
+    const isCorrect = wasAnswered && chosen === q.correct;
     if (isCorrect) score++;
     return {
       numero: qi + 1,
       pergunta: q.text,
-      respondeu: q.options[chosen],
+      respondeu: wasAnswered ? q.options[chosen] : "Não respondida (tempo esgotado)",
       correta: q.options[q.correct],
       acertou: isCorrect ? "Sim" : "Não"
     };
@@ -460,6 +530,7 @@ function recordToPlainText(record) {
 }
 
 async function submitQuiz() {
+  stopTimer();
   const submitBtn = document.getElementById("submitBtn");
   if (submitBtn) {
     submitBtn.disabled = true;
@@ -529,11 +600,13 @@ function renderSubmitError() {
 }
 
 function renderSuccess() {
+  const nota = state.pendingRecord ? state.pendingRecord.nota : "";
   app.innerHTML = `
     <div class="success-box">
       <div class="check">✅</div>
       <h1>Respostas enviadas!</h1>
-      <div class="subtitle">Obrigado, ${escapeHtml(state.name)}. Seu devocional foi registrado com sucesso.</div>
+      <div class="subtitle">Obrigado, ${escapeHtml(state.name)}. Seu teste foi finalizado com sucesso.</div>
+      ${nota ? `<div class="score-result">${nota} acertos</div>` : ""}
     </div>
   `;
 }
