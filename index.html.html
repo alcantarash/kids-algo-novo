@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Devocional - Espírito Santo</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px;
+    color: #1e1b3a;
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(76, 61, 158, 0.12);
+    width: 100%;
+    max-width: 560px;
+    padding: 32px 28px;
+  }
+  .illustration {
+    width: 100%;
+    max-width: 220px;
+    margin: 0 auto 12px;
+  }
+  .illustration svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .star {
+    transform-origin: center;
+    animation: twinkle 1.8s ease-in-out infinite;
+  }
+  .star-1 { animation-delay: 0s; }
+  .star-2 { animation-delay: 0.4s; }
+  .star-3 { animation-delay: 0.8s; }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.4; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+  .heartbeat {
+    transform-origin: 100px 70px;
+    animation: beat 1.1s ease-in-out infinite;
+  }
+  @keyframes beat {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(1.12); }
+    40% { transform: scale(0.98); }
+    55% { transform: scale(1.08); }
+    70% { transform: scale(1); }
+  }
+  .book-wobble {
+    transform-origin: 100px 130px;
+    animation: wobble 2.6s ease-in-out infinite;
+  }
+  @keyframes wobble {
+    0%, 100% { transform: rotate(-2deg); }
+    50% { transform: rotate(2deg); }
+  }
+  h1 {
+    font-size: 22px;
+    margin: 0 0 4px;
+    color: #4c3d9e;
+  }
+  .subtitle {
+    color: #6b6485;
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #d8d4ee;
+    border-radius: 10px;
+    font-size: 15px;
+    margin-bottom: 20px;
+    outline: none;
+  }
+  input[type="text"]:focus {
+    border-color: #7c6fd6;
+  }
+  button {
+    background: #6c5ce7;
+    color: #fff;
+    border: none;
+    padding: 13px 20px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+  }
+  button:hover { background: #5a4bd6; }
+  button:disabled { background: #cfc9ec; cursor: not-allowed; }
+  .question-block {
+    margin-bottom: 26px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid #eee9fb;
+  }
+  .question-title {
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-size: 15px;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #e3ddf7;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1.4;
+    transition: background 0.15s, border-color 0.15s;
+    text-transform: uppercase;
+  }
+  .option:hover { background: #f7f5ff; }
+  .option.selected { border-color: #6c5ce7; background: #f0edfe; }
+  .option input { margin-top: 2px; }
+  .hidden { display: none; }
+  .footer-link {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 12px;
+    color: #a29fc0;
+  }
+  .success-box {
+    text-align: center;
+    padding: 20px 0;
+  }
+  .success-box .check {
+    font-size: 42px;
+    margin-bottom: 8px;
+  }
+  .score-result {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 10px 22px;
+    background: #f0edfe;
+    color: #4c3d9e;
+    font-weight: 700;
+    font-size: 18px;
+    border-radius: 999px;
+  }
+  .error-msg { color: #b73030; font-size: 13px; margin: -12px 0 16px; }
+  .timer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0edfe;
+    color: #4c3d9e;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 20px;
+    transition: background 0.3s, color 0.3s;
+  }
+  .timer-badge.timer-warning {
+    background: #fdeaea;
+    color: #b73030;
+    animation: pulse-warning 1s ease-in-out infinite;
+  }
+  @keyframes pulse-warning {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+</style>
+</head>
+<body>
+<div class="card" id="app"></div>
+
+<script>
+const WEB3FORMS_ACCESS_KEY = "90833577-26d5-435a-9745-ac6b6b878914";
+const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit";
+const QUESTIONS_TO_SHOW = 6;
+
+// Banco de perguntas. Adicione novas perguntas aqui (até 14) mantendo o mesmo formato.
+const QUESTION_BANK = [
+  {
+    id: "q1",
+    text: "O que Paulo fala que NÃO devemos fazer com o Espírito Santo?",
+    options: [
+      "Não devemos entristecer o Espírito Santo.",
+      "Não devemos orar ao Espírito Santo.",
+      "Não devemos falar sobre o Espírito Santo.",
+      "Não devemos pensar no Espírito Santo."
+    ],
+    correct: 0
+  },
+  {
+    id: "q2",
+    text: "Como entristecemos o Espírito Santo?",
+    options: [
+      "Quando oramos.",
+      "Quando ajudamos as pessoas.",
+      "Quando pecamos.",
+      "Quando lemos a Bíblia."
+    ],
+    correct: 2
+  },
+  {
+    id: "q3",
+    text: "Qual é o propósito do Espírito Santo?",
+    options: [
+      "Ter uma comunhão conosco.",
+      "Nos afastar de Deus.",
+      "Fazer tudo por nós.",
+      "Substituir a Bíblia."
+    ],
+    correct: 0
+  },
+  {
+    id: "q4",
+    text: "O que significa ter comunhão com o Espírito Santo?",
+    options: [
+      "Não conversar com Deus.",
+      "Conversar e ser amigo do Espírito Santo.",
+      "Fazer somente aquilo que queremos.",
+      "Não precisar mais orar."
+    ],
+    correct: 1
+  },
+  {
+    id: "q5",
+    text: "Quem é o Espírito Santo?",
+    options: [
+      "Um anjo enviado por Deus.",
+      "Deus, uma das três pessoas da Trindade.",
+      "Apenas um símbolo religioso.",
+      "Um profeta do Antigo Testamento."
+    ],
+    correct: 1
+  },
+  {
+    id: "q6",
+    text: "O que é a Trindade?",
+    options: [
+      "Três deuses diferentes que governam o mundo.",
+      "A existência de um único Deus em três pessoas diferentes: o Pai, o Filho e o Espírito Santo.",
+      "Um nome antigo para a Bíblia.",
+      "Uma festa comemorada apenas na Páscoa."
+    ],
+    correct: 1
+  },
+  {
+    id: "q7",
+    text: "Qual atitude devemos ter para alegrar o Espírito Santo?",
+    options: [
+      "Obediência.",
+      "Indiferença.",
+      "Desobediência.",
+      "Silêncio total."
+    ],
+    correct: 0
+  },
+  {
+    id: "q8",
+    text: "Quem são os filhos de Deus?",
+    options: [
+      "Apenas os líderes da igreja.",
+      "Todos que são guiados pelo Espírito Santo.",
+      "Somente os que nasceram em famílias cristãs.",
+      "Ninguém pode ser considerado filho de Deus."
+    ],
+    correct: 1
+  },
+  {
+    id: "q9",
+    text: "Onde está escrito na Bíblia sobre o Fruto do Espírito?",
+    options: [
+      "Em Gênesis 1:1-3.",
+      "Em Gálatas 5:22-23.",
+      "Em Salmos 23:1-4.",
+      "Em Mateus 5:1-10."
+    ],
+    correct: 1
+  },
+  {
+    id: "q10",
+    text: "Quais são as nove virtudes do Fruto do Espírito?",
+    options: [
+      "Amor, alegria, paz, paciência, amabilidade, bondade, fidelidade, mansidão e domínio próprio.",
+      "Fé, esperança, caridade, sabedoria, coragem, justiça, temperança, humildade e gratidão.",
+      "Oração, jejum, leitura, louvor, comunhão, evangelismo, serviço, ofertas e batismo.",
+      "Perdão, misericórdia, graça, salvação, redenção, santificação, glorificação, justificação e adoção."
+    ],
+    correct: 0
+  },
+  {
+    id: "q11",
+    text: "O que é o Pentecostes?",
+    options: [
+      "Uma festa apenas judaica sem relação com os cristãos.",
+      "Um dia em que o Espírito Santo desceu.",
+      "O dia da crucificação de Jesus.",
+      "Um livro da Bíblia."
+    ],
+    correct: 1
+  },
+  {
+    id: "q12",
+    text: "O que aconteceu com as pessoas quando o Espírito Santo veio?",
+    options: [
+      "Ficaram em silêncio total.",
+      "Falaram em outras línguas.",
+      "Adormeceram profundamente.",
+      "Saíram correndo assustadas."
+    ],
+    correct: 1
+  }
+];
+
+function shuffle(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function pickQuestions() {
+  const count = Math.min(QUESTIONS_TO_SHOW, QUESTION_BANK.length);
+  const chosen = shuffle(QUESTION_BANK).slice(0, count);
+  return chosen.map((q) => {
+    const correctText = q.options[q.correct];
+    const shuffledOptions = shuffle(q.options);
+    const newCorrectIndex = shuffledOptions.indexOf(correctText);
+    return { ...q, options: shuffledOptions, correct: newCorrectIndex };
+  });
+}
+
+const app = document.getElementById("app");
+let state = { screen: "start", name: "", questions: [], answers: {} };
+const QUIZ_DURATION_SECONDS = 60;
+let timerInterval = null;
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function formatTime(totalSeconds) {
+  const s = Math.max(0, totalSeconds);
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
+function startTimer() {
+  if (timerInterval) return;
+  timerInterval = setInterval(() => {
+    state.timeLeft--;
+    const el = document.getElementById("timerText");
+    if (el) {
+      el.textContent = formatTime(state.timeLeft);
+      const badge = document.getElementById("timerBadge");
+      if (badge && state.timeLeft <= 10) badge.classList.add("timer-warning");
+    }
+    if (state.timeLeft <= 0) {
+      stopTimer();
+      submitQuiz();
+    }
+  }, 1000);
+}
+
+function render() {
+  if (state.screen === "start") renderStart();
+  else if (state.screen === "quiz") renderQuiz();
+  else if (state.screen === "success") renderSuccess();
+  else if (state.screen === "submitError") renderSubmitError();
+}
+
+function renderStart() {
+  app.innerHTML = `
+    <div class="illustration">
+      <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="glow" cx="50%" cy="40%" r="65%">
+            <stop offset="0%" stop-color="#fff2b8" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#fff2b8" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle cx="100" cy="70" r="75" fill="url(#glow)"/>
+        <g fill="#ffce54">
+          <path class="star star-1" d="M40,40 l3,7 7,1 -5,5 1,7 -6,-4 -6,4 1,-7 -5,-5 7,-1 z"/>
+          <path class="star star-2" d="M160,50 l2.5,5.5 5.5,0.8 -4,4 1,5.5 -5,-3 -5,3 1,-5.5 -4,-4 5.5,-0.8 z"/>
+          <path class="star star-3" d="M150,95 l2,4.5 4.5,0.7 -3.3,3.2 0.8,4.5 -4,-2.2 -4,2.2 0.8,-4.5 -3.3,-3.2 4.5,-0.7 z"/>
+        </g>
+        <g class="book-wobble">
+          <path d="M30,105 C55,95 78,95 100,102 L100,130 C78,123 55,123 30,133 Z" fill="#6c5ce7"/>
+          <path d="M170,105 C145,95 122,95 100,102 L100,130 C122,123 145,123 170,133 Z" fill="#8b7ff0"/>
+          <path d="M35,108 C56,100 76,100 96,106" stroke="#fff" stroke-width="2" fill="none" opacity="0.6" stroke-linecap="round"/>
+          <path d="M35,116 C56,108 76,108 96,114" stroke="#fff" stroke-width="2" fill="none" opacity="0.6" stroke-linecap="round"/>
+          <path d="M165,108 C144,100 124,100 104,106" stroke="#fff" stroke-width="2" fill="none" opacity="0.6" stroke-linecap="round"/>
+          <path d="M165,116 C144,108 124,108 104,114" stroke="#fff" stroke-width="2" fill="none" opacity="0.6" stroke-linecap="round"/>
+        </g>
+        <path class="heartbeat" d="M100,55 C92,44 74,48 74,64 C74,76 90,86 100,94 C110,86 126,76 126,64 C126,48 108,44 100,55 Z" fill="#ff8fa3"/>
+        <path d="M20,140 C60,132 140,132 180,140" stroke="#e3ddf7" stroke-width="3" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <h1>Devocional - Espírito Santo</h1>
+    <div class="subtitle">Digite seu nome para começar. Você vai responder a algumas perguntas sorteadas.</div>
+    <label for="nameInput">Nome completo</label>
+    <input type="text" id="nameInput" placeholder="Digite seu nome" autocomplete="off" />
+    <div class="error-msg hidden" id="startError">Por favor, digite seu nome.</div>
+    <button id="startBtn">Começar</button>
+  `;
+  document.getElementById("startBtn").onclick = () => {
+    const val = document.getElementById("nameInput").value.trim();
+    if (!val) {
+      document.getElementById("startError").classList.remove("hidden");
+      return;
+    }
+    state.name = val;
+    state.questions = pickQuestions();
+    state.answers = {};
+    state.timeLeft = QUIZ_DURATION_SECONDS;
+    state.screen = "quiz";
+    render();
+  };
+  document.getElementById("nameInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("startBtn").click();
+  });
+}
+
+function renderQuiz() {
+  const qHtml = state.questions.map((q, qi) => {
+    const optsHtml = q.options.map((opt, oi) => {
+      const selected = state.answers[q.id] === oi;
+      return `
+        <div class="option ${selected ? "selected" : ""}" data-qid="${q.id}" data-oi="${oi}">
+          <input type="radio" name="${q.id}" ${selected ? "checked" : ""} readonly />
+          <span>${String.fromCharCode(65 + oi)}) ${opt}</span>
+        </div>
+      `;
+    }).join("");
+    return `
+      <div class="question-block">
+        <div class="question-title">${qi + 1}. ${q.text}</div>
+        ${optsHtml}
+      </div>
+    `;
+  }).join("");
+
+  app.innerHTML = `
+    <h1>Devocional - Espírito Santo</h1>
+    <div class="subtitle">${escapeHtml(state.name)}</div>
+    <div class="timer-badge" id="timerBadge">⏱ <span id="timerText">${formatTime(state.timeLeft)}</span></div>
+    ${qHtml}
+    <div class="error-msg hidden" id="quizError">Responda todas as perguntas antes de enviar.</div>
+    <button id="submitBtn">Enviar respostas</button>
+  `;
+
+  startTimer();
+
+  document.querySelectorAll(".option").forEach((el) => {
+    el.addEventListener("click", () => {
+      const qid = el.getAttribute("data-qid");
+      const oi = parseInt(el.getAttribute("data-oi"), 10);
+      state.answers[qid] = oi;
+      render();
+    });
+  });
+
+  document.getElementById("submitBtn").onclick = async () => {
+    const allAnswered = state.questions.every((q) => state.answers[q.id] !== undefined);
+    if (!allAnswered) {
+      document.getElementById("quizError").classList.remove("hidden");
+      return;
+    }
+    await submitQuiz();
+  };
+}
+
+function buildRecord() {
+  let score = 0;
+  const detail = state.questions.map((q, qi) => {
+    const chosen = state.answers[q.id];
+    const wasAnswered = chosen !== undefined;
+    const isCorrect = wasAnswered && chosen === q.correct;
+    if (isCorrect) score++;
+    return {
+      numero: qi + 1,
+      pergunta: q.text,
+      respondeu: wasAnswered ? q.options[chosen] : "Não respondida (tempo esgotado)",
+      correta: q.options[q.correct],
+      acertou: isCorrect ? "Sim" : "Não"
+    };
+  });
+  return {
+    nome: state.name,
+    data_hora: new Date().toLocaleString("pt-BR"),
+    nota: `${score}/${state.questions.length}`,
+    detalhe: detail
+  };
+}
+
+function recordToPlainText(record) {
+  let lines = [];
+  lines.push(`Nome: ${record.nome}`);
+  lines.push(`Data/Hora: ${record.data_hora}`);
+  lines.push(`Nota: ${record.nota}`);
+  lines.push("");
+  record.detalhe.forEach((d) => {
+    lines.push(`${d.numero}. ${d.pergunta}`);
+    lines.push(`   Respondeu: ${d.respondeu} (${d.acertou === "Sim" ? "Correta" : "Incorreta - correta era: " + d.correta})`);
+  });
+  return lines.join("\n");
+}
+
+async function submitQuiz() {
+  stopTimer();
+  const submitBtn = document.getElementById("submitBtn");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Enviando...";
+  }
+
+  const record = buildRecord();
+  state.pendingRecord = record;
+
+  const MAX_ATTEMPTS = 3;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const response = await fetch(WEB3FORMS_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_ACCESS_KEY,
+          subject: `Devocional - ${record.nome} (${record.nota})`,
+          nome: record.nome,
+          data_hora: record.data_hora,
+          nota: record.nota,
+          respostas: recordToPlainText(record)
+        })
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result || result.success !== true) {
+        throw new Error("Falha no envio via Web3Forms");
+      }
+      state.screen = "success";
+      render();
+      return;
+    } catch (e) {
+      console.error(`Tentativa ${attempt} falhou`, e);
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, 1000 * attempt));
+      }
+    }
+  }
+
+  state.screen = "submitError";
+  render();
+}
+
+function renderSubmitError() {
+  app.innerHTML = `
+    <h1>Não foi possível enviar</h1>
+    <div class="subtitle">Houve uma falha temporária ao enviar sua resposta. Suas respostas não foram perdidas.</div>
+    <button id="retryBtn">Tentar enviar novamente</button>
+    <button id="downloadBtn" style="margin-top:10px; background:#fff; color:#6c5ce7; border:1px solid #d8d4ee;">Baixar resposta como arquivo</button>
+    <div class="footer-link" id="backToQuizLink" style="cursor:pointer; text-decoration:underline; margin-top:16px;">Voltar às perguntas</div>
+  `;
+  document.getElementById("retryBtn").onclick = () => submitQuiz();
+  document.getElementById("downloadBtn").onclick = () => {
+    const text = recordToPlainText(state.pendingRecord);
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `resposta-${state.pendingRecord.nome.replace(/\s+/g, "_")}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  document.getElementById("backToQuizLink").onclick = () => {
+    state.screen = "quiz";
+    render();
+  };
+}
+
+function renderSuccess() {
+  const nota = state.pendingRecord ? state.pendingRecord.nota : "";
+  app.innerHTML = `
+    <div class="success-box">
+      <div class="check">✅</div>
+      <h1>Respostas enviadas!</h1>
+      <div class="subtitle">Obrigado, ${escapeHtml(state.name)}. Seu teste foi finalizado com sucesso.</div>
+      ${nota ? `<div class="score-result">${nota} acertos</div>` : ""}
+    </div>
+  `;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+render();
+</script>
+</body>
+</html>
